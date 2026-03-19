@@ -275,34 +275,39 @@ def update_org(org_id: str):
     # เก็บรายการการเปลี่ยนแปลง (สำหรับ AuditLog)
     changes = []
     
-    # ถ้ามีการเปลี่ยนชื่อ
-    if name and name != org.name:
-        old_name = org.name
-        org.name = name
-        changes.append(f"ชื่อ: '{old_name}' -> '{name}'")
-
     # ถ้ามีการเปลี่ยนสถานะ active
     if "active" in data:
         new_active = bool(data["active"])
         if new_active != org.active:
             org.active = new_active
-            status_text = "เปิดใช้งาน" if new_active else "ปิดใช้งาน"
-            changes.append(f"สถานะ: {status_text}")
             
             # อัปเดต active ของ Manager ของหน่วยงานนี้ด้วย
             # เพื่อให้สอดคล้องกัน (ถ้าปิดหน่วยงาน → Manager login ไม่ได้)
             mgr = User.query.filter_by(role="manager", org_id=org_id).first()
             if mgr:
                 mgr.active = new_active
-
-    # ถ้ามีการเปลี่ยนแปลง → บันทึก AuditLog
-    if changes:
+            
+            # บันทึก AuditLog แยกตามการเปิด/ปิด
+            action_type = "enable_org" if new_active else "disable_org"
+            status_text = "เปิดใช้งาน" if new_active else "ปิดใช้งาน"
+            db.session.add(AuditLog(
+                at=int(time.time() * 1000),
+                action=action_type,
+                by_username=get_current_username(),
+                org_id=org_id,
+                details=f"เปลี่ยนสถานะหน่วยงาน: {status_text}",
+            ))
+    
+    # ถ้ามีการเปลี่ยนชื่อ → บันทึก AuditLog แยก
+    if name and name != org.name:
+        old_name = org.name
+        org.name = name
         db.session.add(AuditLog(
             at=int(time.time() * 1000),
             action="update_org",
             by_username=get_current_username(),
             org_id=org_id,
-            details=f"แก้ไขหน่วยงาน: " + ", ".join(changes),
+            details=f"เปลี่ยนชื่อ: '{old_name}' -> '{name}'",
         ))
     
     # Commit ข้อมูล

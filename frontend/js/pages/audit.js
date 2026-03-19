@@ -52,8 +52,9 @@ const AUDIT_ACTION_LABELS = {
   'upload_image': 'อัปโหลดรูป',
   'delete_image': 'ลบรูป',
   'delete_org': 'ลบหน่วยงาน',
-  'set_org_pin': 'ตั้ง PIN หน่วยงาน',
-  'change_admin_password': 'เปลี่ยนรหัสผ่าน Admin'
+  'enable_org': 'เปิดหน่วยงาน',
+  'disable_org': 'ปิดหน่วยงาน',
+  'set_org_pin': 'ตั้ง PIN หน่วยงาน'
 };
 
 const AUDIT_ACTION_COLORS = {
@@ -65,8 +66,9 @@ const AUDIT_ACTION_COLORS = {
   'upload_image': 'badge-success',
   'delete_image': 'badge-warning',
   'delete_org': 'badge-error',
-  'set_org_pin': 'badge-info',
-  'change_admin_password': 'badge-info'
+  'enable_org': 'badge-success',
+  'disable_org': 'badge-warning',
+  'set_org_pin': 'badge-info'
 };
 
 const BADGE_BG_MAP = {

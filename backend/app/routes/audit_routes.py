@@ -27,7 +27,9 @@ Actions ที่ถูกบันทึก:
 - update_project  - แก้ไขโครงการ
 - delete_project  - ลบโครงการ
 - create_org     - สร้างหน่วยงานใหม่
-- update_org     - แก้ไขหน่วยงาน
+- update_org     - แก้ไขชื่อหน่วยงาน
+- enable_org     - เปิดหน่วยงาน
+- disable_org    - ปิดหน่วยงาน
 - delete_org     - ลบหน่วยงาน
 - set_org_pin    - เปลี่ยน PIN หน่วยงาน
 - upload_image   - อัปโหลดรูป
