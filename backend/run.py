@@ -1,45 +1,77 @@
+"""
+Entry Point - จุดเริ่มต้นการทำงานของระบบ
+
+================================================================================
+วัตถุประสงค์:
+================================================================================
+ไฟล์นี้เป็นจุดเริ่มต้นการทำงานของระบบ (Entry Point)
+เมื่อรันโค้ดนี้จะเริ่มต้น Flask development server
+
+================================================================================
+วิธีใช้:
+================================================================================
+1. Development (ใช้ Flask built-in server):
+   python run.py
+   
+2. Production (ใช้ Gunicorn หรือ uWSGI):
+   gunicorn -w 4 -b 0.0.0.0:5000 "app:create_app()"
+
+================================================================================
+Environment Variables:
+================================================================================
+FLASK_ENV         - ตั้งค่า environment (development/production)
+                    default: "development"
+                    
+FLASK_DEBUG       - เปิด debug mode
+                    default: 1 (ใน development)
+                    
+SECRET_KEY        - Key สำหรับ sign session
+ADMIN_PIN         - PIN ผู้ดูแลระบบ
+
+================================================================================
+Database:
+================================================================================
+Database จะถูกสร้างอัตโนมัติที่: backend/instance/sdg4.db
+ถ้ายังไม่มีไฟล์ จะถูกสร้างใหม่พร้อม seed data
+"""
 from __future__ import annotations
 
-import os
-
+# นำเข้า create_app function จาก app package
 from app import create_app
 
+# สร้าง Flask application instance
 app = create_app()
 
-# ANSI colors (ทำงานใน PowerShell, CMD, Terminal)
-_C = {
-    "rst": "\033[0m",
-    "bold": "\033[1m",
-    "dim": "\033[2m",
-    "cyan": "\033[96m",
-    "green": "\033[92m",
-    "blue": "\033[94m",
-    "magenta": "\033[95m",
-    "yellow": "\033[93m",
-}
-
-
-def _banner() -> None:
+# ถ้ารันไฟล์นี้โดยตรง (python run.py)
+# Flask จะเริ่ม development server
+if __name__ == "__main__":
+    # แสดงข้อมูลเมื่อ start server
+    print("=" * 60)
+    print("SDG 4 Project Management System")
+    print("=" * 60)
+    print()
+    print("Server starting at: http://localhost:5000")
+    print()
+    
+    # ดึง admin PIN จาก config หรือ database
     admin_pin = app.config.get("_SEEDED_ADMIN_PIN")
+    
+    # ถ้าไม่มีใน config ให้ดึงจาก database
     if not admin_pin:
         with app.app_context():
             from app.models import User
-            admin = User.query.filter_by(role="admin", active=True).first()
-            admin_pin = admin.password if admin else None
-    print()
-    print(f"{_C['cyan']}{_C['bold']}  +----------------------------------------------------+{_C['rst']}")
-    print(f"    {_C['green']}REO Planning Helper{_C['rst']}  {_C['dim']}(SDG 4){_C['rst']}")
-    print(f"    {_C['dim']}Backend + Frontend   http://127.0.0.1:5000{_C['rst']}")
+            admin_user = User.query.filter_by(role="admin", active=True).first()
+            if admin_user:
+                admin_pin = admin_user.password
+    
+    # แสดง Admin PIN
     if admin_pin:
-        print(f"    {_C['yellow']}Admin PIN: {admin_pin}{_C['rst']}  {_C['dim']}(keep confidential){_C['rst']}")
-    print(f"{_C['cyan']}  +----------------------------------------------------+{_C['rst']}")
-    print(f"{_C['dim']}  Press CTRL+C to quit{_C['rst']}")
+        print(f"Admin PIN: {admin_pin}")
     print()
-
-
-if __name__ == "__main__":
-    # ใน debug mode Flask reloader รันสคริปต์ 2 รอบ — แสดง banner เฉพาะรอบจริง (child)
-    if os.environ.get("WERKZEUG_RUN_MAIN") == "true":
-        _banner()
-    app.run(debug=True)
-
+    
+    print("-" * 60)
+    
+    # เริ่ม Flask development server
+    # debug=True ทำให้ server รีโหลดอัตโนมัติเมื่อมีการแก้ไขโค้ด
+    # host='0.0.0.0' ทำให้เข้าถึงได้จากเครื่องอื่นในเครือข่าย
+    app.run(debug=True, host="0.0.0.0", port=5000)

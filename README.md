@@ -155,9 +155,10 @@ backend/
 
 | HTTP | URL                          | Description                           | Maintainer           |
 |------|------------------------------|---------------------------------------|----------------------|
-| GET  | `/api/dashboard/summary`     | สรุปตัวเลขบน Dashboard               | นายไชยวัฒน์ ทำดี    |
+| GET  | `/api/dashboard/`          | สถิติหลัก (totalProjects, totalBudget, totalOrgs) | นายไชยวัฒน์ ทำดี    |
+| GET  | `/api/dashboard/summary`    | สรุปตัวเลขบน Dashboard               | นายไชยวัฒน์ ทำดี    |
 | GET  | `/api/dashboard/by-org`      | สรุปตามหน่วยงาน                      | นายไชยวัฒน์ ทำดี    |
-| GET  | `/api/dashboard/by-sdg`      | สรุปตาม SDG Target                    | นายไชยวัฒน์ ทำดี    |
+| GET  | `/api/dashboard/by-sdg`     | สรุปตาม SDG Target                    | นายไชยวัฒน์ ทำดี    |
 | GET  | `/api/projects/export`       | ส่งออกโครงการเป็น CSV (query: orgId?, year?) — Frontend มี modal เลือกโครงการและคอลัมน์ | นายไชยวัฒน์ ทำดี    |
 
 ### 3) นายกฤษฎาพงษ์ ทิณพัฒน์ (Project Management / Create & Delete)
@@ -167,6 +168,7 @@ backend/
 | HTTP | URL                                           | Description                      | Maintainer                    |
 |------|-----------------------------------------------|----------------------------------|-------------------------------|
 | GET  | `/api/projects/`                              | ดึงรายการโครงการ (list + filter)| นายกฤษฎาพงษ์ ทิณพัฒน์       |
+| GET  | `/api/projects/all`                           | ดึงรายการโครงการทั้งหมด (ไม่ filter)| นายกฤษฎาพงษ์ ทิณพัฒน์       |
 | GET  | `/api/projects/<project_id>`                  | รายละเอียดโครงการ               | นายกฤษฎาพงษ์ ทิณพัฒน์       |
 | POST | `/api/projects/`                              | สร้างโครงการใหม่                | นายกฤษฎาพงษ์ ทิณพัฒน์       |
 | PUT  | `/api/projects/<project_id>`                  | แก้ไขโครงการ                    | นายกฤษฎาพงษ์ ทิณพัฒน์       |
@@ -205,8 +207,7 @@ backend/
 
 | HTTP | URL                          | Description                           | Maintainer              |
 |------|------------------------------|---------------------------------------|-------------------------|
-| GET  | `/api/audit-logs/`          | ดึงรายการ audit log + filter         | นายนัธทวัฒน์ เขาแก้ว  |
-| GET  | `/api/audit-logs/filters`   | คืนตัวเลือก filter (actions / users) | นายนัธทวัฒน์ เขาแก้ว  |
+| GET  | `/api/audit/`               | ดึงรายการ audit log + filter         | นายนัธทวัฒน์ เขาแก้ว  |
 
 ---
 

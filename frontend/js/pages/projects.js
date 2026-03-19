@@ -1,3 +1,32 @@
+/**
+ * ================================================================================
+ * Projects Page - หน้าจัดการโครงการ
+ * ================================================================================
+ * 
+ * ไฟล์นี้จัดการหน้าจัดการโครงการ
+ * 
+ * ================================================================================
+ * ฟังก์ชัน:
+ * ================================================================================
+ * 
+ * - renderProjects()       - แสดงหน้าจัดการโครงการ
+ * - renderProjectsAll()     - แสดงหน้าดูโครงการทั้งหมด (view-only)
+ * - filterProjects()       - กรองโครงการตามเงื่อนไข
+ * - openProjectModal()     - เปิด modal สร้าง/แก้ไขโครงการ
+ * - saveProject()          - บันทึกโครงการ
+ * - deleteProject()        - ลบโครงการ
+ * - previewProjectImages() - แสดงตัวอย่างรูปภาพ
+ * 
+ * ================================================================================
+ * สิทธิ์การเข้าถึง:
+ * ================================================================================
+ * 
+ * - Admin: จัดการโครงการทั้งหมดได้
+ * - Manager: จัดการเฉพาะโครงการของหน่วยงานตัวเอง
+ * 
+ * ================================================================================
+ */
+
 // ==================== Projects Page ====================
 let projectsScope = 'manage';
 
@@ -485,7 +514,7 @@ async function openProjectModal(projectId = null) {
         </div>
         <div class="relative">
           <label class="block text-sm font-medium mb-2">ปีงบประมาณ</label>
-          <input id="swal-year" type="text" class="input input-bordered w-full year-picker-input" value="${project?.year || ''}" placeholder="เช่น 2568" readonly onclick="openYearPicker('swal-year')">
+          <input id="swal-year" type="text" class="input input-bordered w-full year-picker-input" value="${project?.year || ''}" placeholder="เช่น 2569" readonly onclick="openYearPicker('swal-year')">
           <input type="hidden" id="swal-yearValue" value="${project?.year || ''}">
           <p id="swal-err-year" class="text-red-600 text-xs mt-1 hidden"></p>
         </div>
@@ -663,7 +692,7 @@ async function openProjectModal(projectId = null) {
       if (hasError) return false;
 
       const parsedBudget = Number(budget);
-      const parsedYear = Number(yearInput) || 2568;
+      const parsedYear = Number(yearInput) || 2569;
       const body = { title, budget: parsedBudget, owner, year: parsedYear, startDate, endDate, objective, policy, sdg, orgId: orgId || session.orgId, images };
 
       try {

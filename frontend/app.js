@@ -2726,7 +2726,6 @@ function renderAuditLog() {
     'delete_org': 'ลบหน่วยงาน',
     'delete_org_cascade': 'ลบหน่วยงาน (พร้อมข้อมูล)',
     'set_org_pin': 'ตั้ง PIN หน่วยงาน',
-    'reset_all_org_pins': 'รีเซ็ต PIN ทั้งหมด',
     'change_admin_password': 'เปลี่ยนรหัสผ่าน Admin'
   };
   
@@ -2739,7 +2738,6 @@ function renderAuditLog() {
     'delete_org': 'badge-error',
     'delete_org_cascade': 'badge-error',
     'set_org_pin': 'badge-info',
-    'reset_all_org_pins': 'badge-warning',
     'change_admin_password': 'badge-info'
   };
 
@@ -3029,7 +3027,6 @@ function filterAuditLog(event) {
     'delete_org': 'ลบหน่วยงาน',
     'delete_org_cascade': 'ลบหน่วยงาน (พร้อมข้อมูล)',
     'set_org_pin': 'ตั้ง PIN หน่วยงาน',
-    'reset_all_org_pins': 'รีเซ็ต PIN ทั้งหมด',
     'change_admin_password': 'เปลี่ยนรหัสผ่าน Admin'
   };
   
@@ -3042,7 +3039,6 @@ function filterAuditLog(event) {
     'delete_org': 'badge-error',
     'delete_org_cascade': 'badge-error',
     'set_org_pin': 'badge-info',
-    'reset_all_org_pins': 'badge-warning',
     'change_admin_password': 'badge-info'
   };
   
@@ -3249,20 +3245,6 @@ async function setOrgPin(orgId) {
     showSuccess('บันทึกสำเร็จ', 'PIN หน่วยงานถูกอัปเดตแล้ว');
     renderUsers();
   }
-}
-
-async function resetAllOrgPins() {
-  if (session?.role !== 'admin') return;
-  const ok = await confirm('ตั้ง PIN ทั้งหมด', `ต้องการตั้ง PIN ทุกหน่วยงานเป็น ${DEFAULT_ORG_PIN} ใช่หรือไม่?`, 'ตั้งค่า');
-  if (!ok) return;
-
-  (DB.orgs || []).forEach(org => { org.pin = DEFAULT_ORG_PIN; });
-  ensureOrgPins(DB);
-  DB.audit = DB.audit || [];
-  DB.audit.unshift({ at: Date.now(), action: 'reset_all_org_pins', by: getCurrentUsername(), pin: DEFAULT_ORG_PIN });
-  saveData();
-  showSuccess('สำเร็จ', 'ตั้ง PIN ทุกหน่วยงานเรียบร้อย');
-  renderUsers();
 }
 
 

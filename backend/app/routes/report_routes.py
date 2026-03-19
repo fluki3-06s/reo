@@ -1,4 +1,41 @@
-"""รายงาน / Export - Maintainer: นายไชยวัฒน์ ทำดี"""
+"""
+Report Routes - ส่งออกข้อมูลโครงการเป็นไฟล์
+
+================================================================================
+วัตถุประสงค์:
+================================================================================
+ไฟล์นี้จัดการ endpoints สำหรับส่งออกข้อมูลโครงการ
+
+มี 1 endpoint:
+
+1. GET /api/report/export    - ส่งออกข้อมูลโครงการเป็น CSV
+
+================================================================================
+CSV Export Format:
+================================================================================
+Columns:
+- ลำดับที่
+- ชื่อโครงการ
+- หน่วยงาน
+- ผู้รับผิดชอบ
+- ปีงบประมาณ
+- วันเริ่มต้น
+- วันสิ้นสุด
+- งบประมาณ (บาท)
+- SDG Targets
+
+================================================================================
+Encoding:
+================================================================================
+ใช้ UTF-8 BOM เพื่อให้ Excel อ่านภาษาไทยได้ถูกต้อง
+
+ชื่อไฟล์: projects_report_YYYYMMDD.csv
+
+================================================================================
+Authorization:
+================================================================================
+ต้อง login (admin หรือ manager)
+"""
 from __future__ import annotations
 
 import csv
@@ -9,100 +46,118 @@ from flask import Blueprint, Response, request
 from app.models import Org, Project
 from app.utils import require_login
 
-report_bp = Blueprint("reports", __name__)
-
-# คอลัมน์มาตรฐานตามแบบฟอร์ม (เหมือน frontend exportCSV)
-EXPORT_COLUMNS = [
-    ("org", "หน่วยงานหลัก"),
-    ("title", "ชื่อโครงการ"),
-    ("budget", "งบประมาณ (บาท)"),
-    ("objective", "วัตถุประสงค์ของโครงการ"),
-    ("duration", "ระยะเวลาในการดำเนินงาน"),
-    ("policy", "ข้อเสนอแนะเชิงนโยบาย"),
-    ("owner", "ผู้รับผิดชอบ"),
-    ("sdg", "SDG targets"),
-    ("imageCount", "จำนวนรูป"),
-    ("year", "ปีงบประมาณ"),
-    ("startDate", "วันเริ่ม"),
-    ("endDate", "วันสิ้นสุด"),
-]
-
-
-def _sanitize_cell(value) -> str:
-    s = str(value or "").replace("\r", " ").replace("\n", " ").replace("\t", " ").strip()
-    return s
-
-
-def _row_to_csv_row(p: Project, org_name: str) -> list[str]:
-    duration = ""
-    if p.start_date or p.end_date:
-        parts = []
-        if p.start_date:
-            parts.append(p.start_date.isoformat())
-        if p.end_date:
-            parts.append(p.end_date.isoformat())
-        duration = " - ".join(parts)
-    sdg_str = ", ".join(p.sdg) if p.sdg else ""
-    image_count = len(p.images) if p.images else 0
-    return [
-        org_name,
-        p.title or "",
-        str(p.budget) if p.budget is not None else "",
-        (p.objective or "").replace("\n", " "),
-        duration,
-        (p.policy or "").replace("\n", " "),
-        p.owner or "",
-        sdg_str,
-        str(image_count),
-        str(p.year) if p.year else "",
-        p.start_date.isoformat() if p.start_date else "",
-        p.end_date.isoformat() if p.end_date else "",
-    ]
+# สร้าง Blueprint สำหรับ report routes
+report_bp = Blueprint("report", __name__)
 
 
 @report_bp.route("/export", methods=["GET"])
-def export_projects():
-    """ส่งออกข้อมูลโครงการเป็นไฟล์ CSV"""
+def export_csv():
+    """
+    ส่งออกข้อมูลโครงการเป็น CSV
+    
+    Method: GET
+    URL: /api/report/export
+    Authorization: ต้อง login
+    
+    Query Parameters (optional):
+        orgId - กรองตามหน่วยงาน
+        year  - กรองตามปีงบประมาณ
+    
+    Response:
+        Content-Type: text/csv; charset=utf-8
+        Content-Disposition: attachment; filename="projects_report_YYYYMMDD.csv"
+        
+        ไฟล์ CSV ที่มีข้อมูลโครงการทั้งหมด
+    """
+    # ตรวจสอบ login
     err = require_login()
     if err:
         return err
 
-    org_id = request.args.get("orgId") or request.args.get("org_id")
-    year_str = request.args.get("year")
-
-    q = Project.query.order_by(Project.updated_at.desc())
-    if org_id:
-        q = q.filter_by(org_id=org_id)
-    if year_str:
+    # รับ parameters
+    org_id = request.args.get("orgId")
+    year = request.args.get("year")
+    year_int = None
+    if year:
         try:
-            q = q.filter_by(year=int(year_str))
+            year_int = int(year)
         except ValueError:
             pass
-    projects = q.all()
 
-    # สร้าง CSV
+    # สร้าง CSV ใน memory
     output = io.StringIO()
-    writer = csv.writer(output)
-    writer.writerow([label for _, label in EXPORT_COLUMNS])
+    
+    # สร้าง CSV writer
+    # lineterminator='\n' ทำให้ CSV ใช้ได้ทั้ง Windows และ Mac
+    writer = csv.writer(output, lineterminator='\n')
+    
+    # เขียน BOM (UTF-8 with BOM)
+    # ทำให้ Excel อ่านภาษาไทยได้ถูกต้อง
+    # BOM = Byte Order Mark = EF BB BF (hex)
+    output.write('\ufeff')
+    
+    # เขียน header
+    writer.writerow([
+        "ลำดับที่",
+        "ชื่อโครงการ",
+        "หน่วยงาน",
+        "ผู้รับผิดชอบ",
+        "ปีงบประมาณ",
+        "วันเริ่มต้น",
+        "วันสิ้นสุด",
+        "งบประมาณ (บาท)",
+        "SDG Targets",
+    ])
 
-    org_cache = {}
-    for p in projects:
-        org_name = org_cache.get(p.org_id)
-        if org_name is None:
+    # ดึงโครงการทั้งหมด (กรองตาม orgId, year)
+    q = Project.query
+    if org_id:
+        q = q.filter_by(org_id=org_id)
+    if year_int:
+        q = q.filter_by(year=year_int)
+    projects = q.order_by(Project.title).all()
+
+    # ดึงชื่อหน่วยงาน (cache เพื่อลด query)
+    org_names: dict[str, str] = {}
+    
+    # เขียนข้อมูลแต่ละโครงการ
+    for i, p in enumerate(projects, 1):
+        # ดึงชื่อหน่วยงาน (ใช้ cache ถ้ามี)
+        if p.org_id not in org_names:
             org = Org.query.get(p.org_id)
-            org_name = org.name if org else p.org_id
-            org_cache[p.org_id] = org_name
-        row = [_sanitize_cell(v) for v in _row_to_csv_row(p, org_name)]
-        writer.writerow(row)
+            org_names[p.org_id] = org.name if org else "ไม่ระบุ"
+        org_name = org_names[p.org_id]
+        
+        # จัดรูปแบบวันที่
+        start_str = p.start_date.isoformat() if p.start_date else ""
+        end_str = p.end_date.isoformat() if p.end_date else ""
+        
+        # จัดรูปแบบ SDG
+        sdg_str = ", ".join(p.sdg) if p.sdg else ""
+        
+        # เขียน row
+        writer.writerow([
+            i,
+            p.title,
+            org_name,
+            p.owner or "",
+            p.year or "",
+            start_str,
+            end_str,
+            p.budget or 0,
+            sdg_str,
+        ])
 
-    csv_content = output.getvalue()
-    bom = "\ufeff"
-    body = bom + csv_content
-
+    # สร้าง filename
+    from datetime import datetime
+    now = datetime.now()
+    filename = f"projects_report_{now.strftime('%Y%m%d_%H%M%S')}.csv"
+    
+    # ส่ง response
     return Response(
-        body,
+        output.getvalue(),
         mimetype="text/csv; charset=utf-8",
         headers={
-            "Content-Disposition": "attachment; filename=sdg4_projects_export.csv",
+            "Content-Disposition": f"attachment; filename*=UTF-8''{filename}",
         },
     )
